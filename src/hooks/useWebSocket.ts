@@ -4,8 +4,15 @@ import type { ClientMessage, ServerMessage } from '@/lib/types'
 
 /**
  * Determine WebSocket URL based on environment
+ * In dev: connect directly to worker (bypasses Vite proxy issues)
+ * In prod: use same host (Worker serves both assets and WebSocket)
  */
 function getWebSocketUrl(sessionId: string): string {
+  if (import.meta.env.DEV) {
+    // Dev: connect directly to worker on port 8711
+    return `ws://localhost:8711/ws/${sessionId}`
+  }
+  // Prod: use same host as the page
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
   const host = window.location.host
   return `${protocol}//${host}/ws/${sessionId}`

@@ -19,8 +19,12 @@ class_name = "SandboxSession"
 
 [[migrations]]
 tag = "v1"
-new_classes = ["SandboxSession"]
+new_sqlite_classes = ["SandboxSession"]
 
 # Environment variables (secrets managed separately)
 [vars]
 ENVIRONMENT = "development"
+
+# Development server settings
+[dev]
+port = 8711

@@ -21,5 +21,20 @@ export default defineConfig({
   server: {
     port: 5111,
     strictPort: true,
+    open: false,
+    proxy: {
+      // Proxy WebSocket requests to the Worker in development
+      '/ws': {
+        target: 'ws://localhost:8711',
+        ws: true,
+        changeOrigin: true,
+        rewriteWsOrigin: true,
+      },
+      // Proxy API requests to the Worker in development
+      '/api': {
+        target: 'http://localhost:8711',
+        changeOrigin: true,
+      },
+    },
   },
 })

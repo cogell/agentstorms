@@ -57,3 +57,6 @@ src/routeTree.gen.ts
 
 # bv (beads viewer) local config and caches
 .bv/
+
+# Wrangler local state
+.wrangler/
