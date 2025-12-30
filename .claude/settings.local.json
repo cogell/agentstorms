@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(tree:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:developers.cloudflare.com)",
+      "WebFetch(domain:blog.cloudflare.com)",
+      "WebFetch(domain:sunilpai.dev)",
+      "Bash(git -C /Users/cogell/projects/empire/agentstorms log --oneline -10)",
+      "Bash(bd create:*)",
+      "Bash(bd dep add:*)",
+      "Bash(bd show:*)",
+      "Bash(bd dep remove:*)",
+      "Bash(bd update:*)",
+      "Bash(bd ready:*)",
+      "Bash(bd blocked)",
+      "Bash(bd list:*)",
+      "Bash(pnpm install:*)",
+      "Bash(curl:*)",
+      "Bash(pnpm exec tsc:*)",
+      "Bash(ls:*)",
+      "Bash(bd close:*)",
+      "Bash(pnpm build:*)",
+      "Bash(timeout 10 pnpm dev:worker:*)",
+      "Bash(bd stats:*)",
+      "Bash(pnpm add:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}

@@ -37,3 +37,23 @@ coverage/
 *.tsbuildinfo
 .cache/
 tmp/
+
+# Generated config files
+vite.config.d.ts
+vite.config.js
+
+# Generated route tree (TanStack Router)
+src/routeTree.gen.ts
+
+# Beads (local db files)
+.beads/beads.db
+.beads/beads.db-*
+.beads/bd.sock
+.beads/bd.pipe
+.beads/.exclusive-lock
+.beads/daemon.lock
+.beads/daemon.log
+.git/beads-worktrees/
+
+# bv (beads viewer) local config and caches
+.bv/
