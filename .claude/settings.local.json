@@ -26,7 +26,9 @@
       "Bash(bd stats:*)",
       "Bash(pnpm add:*)",
       "Bash(git add:*)",
-      "Bash(bd sync:*)"
+      "Bash(bd sync:*)",
+      "Bash(cat:*)",
+      "Bash(timeout 10 pnpm dev:*)"
     ]
   }
 }
