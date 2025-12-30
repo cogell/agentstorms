@@ -1,16 +1,20 @@
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100..800&display=swap');
 
-@theme inline {
+/* CSS Custom Properties - using :root for browser compatibility */
+:root {
+  /* Font overrides */
   --font-sans: "JetBrains Mono", ui-monospace, monospace;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* No border radius (Mira style) */
   --radius: 0;
   --radius-sm: 0;
   --radius-md: 0;
   --radius-lg: 0;
   --radius-xl: 0;
 
-  /* Semantic colors - registered in theme for utility generation */
+  /* Semantic colors */
   --color-background: oklch(0.98 0.00 106);
   --color-foreground: oklch(0.15 0.00 49);
   --color-card: oklch(0.98 0.00 106);
@@ -32,13 +36,14 @@
   --color-ring: oklch(0.696 0.17 162);
 }
 
-@layer base {
-  * {
-    border-color: var(--color-border);
-  }
-  body {
-    background-color: var(--color-background);
-    color: var(--color-foreground);
-    font-feature-settings: "rlig" 1, "calt" 1;
-  }
+/* Base styles */
+* {
+  border-color: var(--color-border);
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  font-feature-settings: "rlig" 1, "calt" 1;
 }

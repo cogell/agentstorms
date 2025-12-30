@@ -4,10 +4,10 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --port 5111",
     "dev:worker": "wrangler dev",
     "build": "tsc -b && vite build",
-    "preview": "vite preview",
+    "preview": "vite preview --port 5111",
     "deploy": "wrangler deploy"
   },
   "dependencies": {

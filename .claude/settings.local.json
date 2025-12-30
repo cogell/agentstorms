@@ -28,7 +28,12 @@
       "Bash(git add:*)",
       "Bash(bd sync:*)",
       "Bash(cat:*)",
-      "Bash(timeout 10 pnpm dev:*)"
+      "Bash(timeout 10 pnpm dev:*)",
+      "Skill(dev-browser:dev-browser)",
+      "Bash(pnpm list:*)",
+      "Bash(npx tsx:*)",
+      "Bash(lsof:*)",
+      "Bash(DEBUG=vite:config timeout 10 pnpm dev)"
     ]
   }
 }
