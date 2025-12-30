@@ -22,50 +22,89 @@ function getWebSocketUrl(sessionId: string): string {
  * WebSocket connection hook for DO communication
  * Manages connection lifecycle and message handling
  */
+// Track active connections globally to prevent duplicates across StrictMode remounts
+const activeConnections = new Map<string, WebSocket>()
+
 export function useWebSocket(sessionId: string) {
   const wsRef = useRef<WebSocket | null>(null)
-  const {
-    isConnected,
-    error,
-    setConnected,
-    setError,
-    setExecuting,
-    hydrateFromServer,
-    applyPartialUpdate,
-    reset,
-  } = useSandboxStore()
+  const { isConnected, error } = useSandboxStore()
+
+  // Use refs for store actions to avoid effect re-runs
+  const storeRef = useRef(useSandboxStore.getState())
+  useEffect(() => {
+    // Keep ref in sync with store
+    return useSandboxStore.subscribe((state) => {
+      storeRef.current = state
+    })
+  }, [])
 
   /**
-   * Handle incoming server messages
+   * Connect to WebSocket - only depends on sessionId
    */
-  const handleMessage = useCallback(
-    (event: MessageEvent) => {
+  useEffect(() => {
+    if (!sessionId) return
+
+    // Check for existing connection (handles StrictMode double-mount)
+    const existingWs = activeConnections.get(sessionId)
+    if (existingWs && (existingWs.readyState === WebSocket.OPEN || existingWs.readyState === WebSocket.CONNECTING)) {
+      console.log('Reusing existing WebSocket connection')
+      wsRef.current = existingWs
+      return
+    }
+
+    const url = getWebSocketUrl(sessionId)
+    console.log('Connecting to WebSocket:', url)
+
+    const ws = new WebSocket(url)
+    wsRef.current = ws
+    activeConnections.set(sessionId, ws)
+
+    ws.onopen = () => {
+      console.log('WebSocket connected')
+      storeRef.current.setConnected(true)
+      storeRef.current.setError(null)
+    }
+
+    ws.onclose = (event) => {
+      console.log('WebSocket closed:', event.code, event.reason)
+      storeRef.current.setConnected(false)
+      activeConnections.delete(sessionId)
+      wsRef.current = null
+    }
+
+    ws.onerror = (event) => {
+      console.error('WebSocket error:', event)
+      storeRef.current.setError('WebSocket connection error')
+    }
+
+    ws.onmessage = (event: MessageEvent) => {
       try {
         const message = JSON.parse(event.data) as ServerMessage
+        const store = storeRef.current
 
         switch (message.type) {
           case 'session:state':
-            hydrateFromServer(message.state as DOState)
+            store.hydrateFromServer(message.state as DOState)
             break
 
           case 'state:updated':
-            applyPartialUpdate(message.partial)
+            store.applyPartialUpdate(message.partial)
             break
 
           case 'step:start':
-            setExecuting(true)
+            store.setExecuting(true)
             break
 
           case 'step:complete':
           case 'step:error':
-            setExecuting(false)
+            store.setExecuting(false)
             if (message.type === 'step:error') {
-              setError(message.error)
+              store.setError(message.error)
             }
             break
 
           case 'error':
-            setError(message.message)
+            store.setError(message.message)
             break
 
           default:
@@ -74,50 +113,29 @@ export function useWebSocket(sessionId: string) {
       } catch (e) {
         console.error('Failed to parse WebSocket message:', e)
       }
-    },
-    [hydrateFromServer, applyPartialUpdate, setExecuting, setError]
-  )
-
-  /**
-   * Connect to WebSocket
-   */
-  useEffect(() => {
-    if (!sessionId) return
-
-    const url = getWebSocketUrl(sessionId)
-    console.log('Connecting to WebSocket:', url)
-
-    const ws = new WebSocket(url)
-    wsRef.current = ws
-
-    ws.onopen = () => {
-      console.log('WebSocket connected')
-      setConnected(true)
-      setError(null)
     }
-
-    ws.onclose = (event) => {
-      console.log('WebSocket closed:', event.code, event.reason)
-      setConnected(false)
-      wsRef.current = null
-    }
-
-    ws.onerror = (event) => {
-      console.error('WebSocket error:', event)
-      setError('WebSocket connection error')
-    }
-
-    ws.onmessage = handleMessage
 
     // Cleanup on unmount or sessionId change
     return () => {
-      console.log('Cleaning up WebSocket connection')
-      reset()
-      if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
-        ws.close()
+      // Don't close if this is a StrictMode remount - let the new mount reuse it
+      // Only close if the component is truly unmounting (sessionId changed or navigated away)
+      const currentWs = activeConnections.get(sessionId)
+      if (currentWs === ws) {
+        // Small delay to allow StrictMode second mount to claim the connection
+        setTimeout(() => {
+          const stillActive = activeConnections.get(sessionId)
+          if (stillActive === ws && wsRef.current !== ws) {
+            console.log('Cleaning up WebSocket connection')
+            activeConnections.delete(sessionId)
+            storeRef.current.reset()
+            if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+              ws.close()
+            }
+          }
+        }, 100)
       }
     }
-  }, [sessionId, handleMessage, setConnected, setError, reset])
+  }, [sessionId]) // Only re-run when sessionId changes
 
   /**
    * Send message to server

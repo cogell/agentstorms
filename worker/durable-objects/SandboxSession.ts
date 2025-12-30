@@ -171,22 +171,39 @@ export class SandboxSession extends DurableObject {
       return new Response('Expected WebSocket', { status: 426 })
     }
 
-    // Load state before accepting connection
-    await this.loadState(sessionId)
-
+    // Create WebSocket pair - use array destructuring for guaranteed order
     const pair = new WebSocketPair()
-    const [client, server] = Object.values(pair)
+    const client = pair[0]
+    const server = pair[1]
 
-    // Accept with tags for identification
+    // Accept the WebSocket connection
     this.ctx.acceptWebSocket(server, [sessionId])
 
-    // Send current state to new client
-    this.send(server, { type: 'session:state', state: this.state! })
+    // Load state and send to client (after accept, using the hibernation API)
+    // The webSocketOpen handler will send the initial state
+    this.loadState(sessionId).catch(err => {
+      console.error('Failed to load state:', err)
+    })
 
     return new Response(null, {
       status: 101,
       webSocket: client,
     })
+  }
+
+  /**
+   * Called when WebSocket connection opens (Hibernation API)
+   */
+  async webSocketOpen(ws: WebSocket): Promise<void> {
+    // Get session ID from tags
+    const tags = this.ctx.getTags(ws)
+    const sessionId = tags[0] || 'unknown'
+
+    // Ensure state is loaded
+    await this.loadState(sessionId)
+
+    // Send current state to the new client
+    this.send(ws, { type: 'session:state', state: this.state! })
   }
 
   /**
